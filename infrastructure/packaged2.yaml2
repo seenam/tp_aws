@@ -9,7 +9,7 @@ Parameters:
     Type: String
     Description: S3 bucket name (e.g. votre identifiant sans le learnaws + 
       -bucket pour différencier du bucket de votre voisin)
-    Default: skumako-s3-bucket-trigger-lambda
+    Default: s3-bucket-trigger-lambda
 Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role

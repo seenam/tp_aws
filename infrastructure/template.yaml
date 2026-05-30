@@ -26,7 +26,7 @@ Resources:
       ManagedPolicyArns:
       - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-      - PolicyName: !Sub '${Environment}-LambdaS3AccessPolicy'
+      - PolicyName: LambdaS3AccessPolicy
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
@@ -49,6 +49,9 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.12
       Code: ../src
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: s3-trigger-db
 
   LambdaInvokePermission:
     Type: AWS::Lambda::Permission
@@ -66,4 +69,51 @@ Resources:
       NotificationConfiguration:
         LambdaConfigurations:
         - Event: s3:ObjectCreated:*
+          Filter:
+            S3Key:
+              Rules:
+              - Name: suffix
+                Value: .jpg
+          Function: !GetAtt LambdaTrigger.Arn
+        - Event: s3:ObjectCreated:*
+          Filter:
+            S3Key:
+              Rules:
+              - Name: suffix
+                Value: .jpeg
+          Function: !GetAtt LambdaTrigger.Arn
+        - Event: s3:ObjectCreated:*
+          Filter:
+            S3Key:
+              Rules:
+              - Name: suffix
+                Value: .png
+          Function: !GetAtt LambdaTrigger.Arn
+        - Event: s3:ObjectCreated:*
+          Filter:
+            S3Key:
+              Rules:
+              - Name: suffix
+                Value: .gif
+          Function: !GetAtt LambdaTrigger.Arn
+        - Event: s3:ObjectCreated:*
+          Filter:
+            S3Key:
+              Rules:
+              - Name: suffix
+                Value: .bmp
+          Function: !GetAtt LambdaTrigger.Arn
+        - Event: s3:ObjectCreated:*
+          Filter:
+            S3Key:
+              Rules:
+              - Name: suffix
+                Value: .webp
+          Function: !GetAtt LambdaTrigger.Arn
+        - Event: s3:ObjectCreated:*
+          Filter:
+            S3Key:
+              Rules:
+              - Name: suffix
+                Value: .tiff
           Function: !GetAtt LambdaTrigger.Arn
