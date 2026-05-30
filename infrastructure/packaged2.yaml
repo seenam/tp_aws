@@ -7,7 +7,8 @@ Parameters:
     Default: skumako
   BucketName:
     Type: String
-    Description: S3 bucket name
+    Description: S3 bucket name (e.g. votre identifiant sans le learnaws + 
+      -bucket pour différencier du bucket de votre voisin)
     Default: skumako-s3-bucket-trigger-lambda
 Resources:
   LambdaExecutionRole:
@@ -49,10 +50,10 @@ Resources:
         Fn::GetAtt:
         - LambdaExecutionRole
         - Arn
-      Runtime: python3.11
+      Runtime: python3.12
       Code:
-        S3Bucket: iabd-sourcecode-management-bucket
-        S3Key: 3a51e53c4deca1d1826ae7406bf5d8eb
+        S3Bucket: skumako-iabd-sourcecode-management-bucket
+        S3Key: lambda_package.zip
   LambdaInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:

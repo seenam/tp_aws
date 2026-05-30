@@ -41,10 +41,10 @@ Resources:
                     dynamodb:PutItem,
                     dynamodb:GetItem
                 ]
-                Resource: 'arn:aws:dynamodb:::table/s3-trigger-db'
+                Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/s3-trigger-db'
 
   # Fonction Lambda
-  LambdaTigger:
+  LambdaTrigger:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub '${Environment}-lambda-trigger'
@@ -53,10 +53,10 @@ Resources:
       Runtime: python3.12
       Code: ../src
 
-  LambdaPermissionsForS3:
+  LambdaInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref LambdaTigger
+      FunctionName: !GetAtt LambdaTrigger.Arn
       Action: 'lambda:InvokeFunction'
       Principal: 's3.amazonaws.com'
       SourceArn: !Sub 'arn:aws:s3:::${Environment}-${BucketName}'
@@ -64,9 +64,10 @@ Resources:
   # S3 bucket pour stocker les fichier
   S3Bucket:
     Type: AWS::S3::Bucket
+    DependsOn: LambdaInvokePermission
     Properties:
       BucketName: !Sub '${Environment}-${BucketName}'
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: 's3:ObjectCreated:*'
-            Function: !GetAtt LambdaTigger.Arn
+            Function: !GetAtt LambdaTrigger.Arn
