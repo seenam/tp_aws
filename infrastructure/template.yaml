@@ -1,56 +1,64 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: 'AWS CloudFormation Template for Infrastructure'
-parameters:
-  Envname:
+AWSTemplateFormatVersion: '2012-10-17'
+Description: 'TP AWS Lambda - Code charge depuis src/main.py'
+
+Parameters:
+  Environment:
     Type: String
-    description: 'Environment name (e.g votre identifiant sans learning)'
+    Description: 'Environnement name (e.g. votre identifiant sans le learnaws)'
     Default: 'skumako'
   BucketName:
     Type: String
-    Description: "S3 bucket name (e.g votre identifiant sans learning)"
-    Default: "s3-bucket-trigger-lambda"
-Resources: 
-## IAM Role pour la lambda
+    Description: 'S3 bucket name (e.g. votre identifiant sans le learnaws + -bucket pour différencier du bucket de votre voisin)'
+    Default: 's3-bucket-trigger-lambda'
+
+Resources:
+# Rôle IAM pour la fonction Lambda
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${Envname}-LambdaExecutionRole'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
-          - Effect: Allow
-            Principal:
-              Service: [lambda.amazonaws.com]
-            Action: [sts:AssumeRole]
+        - Effect: Allow
+          Principal:
+            Service: [lambda.amazonaws.com]
+          Action: [sts:AssumeRole]
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole 
       Policies:
-        - PolicyName: !Sub '${Envname}-LambdaS3AccessPolicy'
+        - PolicyName: LambdaS3AccessPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Deny
-                Action:
-                  - s3:GetObject
-                  - s3:PutObject
-                Resource: !GetAtt S3Bucket.Arn
-# Fonction lambda pour gerer les event S3
-  LambdaTrigger:
+                Action: [s3:GetObject, s3:PutObject]
+                Resource: !Sub 'arn:aws:s3:::${Environment}-${BucketName}/*'
+                # Resource: !GetAtt S3Bucket.Arn
+
+                # Ecrire dand la base de données
+              - Effect: Allow
+                Action: [
+                    dynamodb:PutItem,
+                    dynamodb:GetItem
+                ]
+                Resoure:
+
+  # Fonction Lambda
+  LambdaTigger:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub '${Envname}-${BucketName}'
+      FunctionName: !Sub '${Environment}-lambda-trigger'
       Handler: main.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.12
-      code : ../src
- 
-# s3 bucket pour le stocker les fichiers
+      Code: ../src
+
+  # S3 bucket pour stocker les fichier 
   S3Bucket:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
     Properties:
-      BucketName: !Sub '${Envname}-${BucketName}'
+      BucketName: !sub '${Environment}-${BucketName}'
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: 's3:ObjectCreated:*'
-            Function: !GetAtt LambdaTrigger.Arn
+            Function: !GetAtt LambdaFunction.Arn
